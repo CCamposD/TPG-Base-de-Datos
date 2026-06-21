@@ -29,7 +29,7 @@
 | 6 | Planes de ejecución / mediciones iniciales | [**LISTO**](./results/explain-before.txt) | `results/explain-before.txt` |
 | 7 | Consultas optimizadas | [**LISTO**](./scripts/06-optimized-queries.sql) | `scripts/06-optimized-queries.sql` |
 | 8 | Comparación de tiempos antes y después | [**LISTO**](./results/mediciones.md) | `results/mediciones.md` |
-| 9 | Conclusiones sobre las mejoras aplicadas | [**FALTA**] | — |
+| 9 | Conclusiones sobre las mejoras aplicadas | [**LISTO**](./document/conclusiones.md) | `document/conclusiones.md` |
 
 ---
 
