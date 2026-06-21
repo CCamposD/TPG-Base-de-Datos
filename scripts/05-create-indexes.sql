@@ -2,10 +2,24 @@
 -- TP: Optimización de Consultas SQL
 -- Materia: Base de Datos - Cátedra Merlino - 1C 2026
 -- Script: Creación de índices
+-- Ejecutar después de 04-explain-original.sql
 -- ============================================================
 
-CREATE INDEX idx_fecha_pedido  ON pedidos        (fecha_pedido);
-CREATE INDEX idx_id_cliente    ON pedidos        (id_cliente);
-CREATE INDEX idx_id_pedido     ON detalle_pedido (id_pedido);
-CREATE INDEX idx_id_producto   ON detalle_pedido (id_producto);
-CREATE INDEX idx_id_categoria  ON productos      (id_categoria);
+-- Búsqueda de pedidos por fecha
+CREATE INDEX idx_pedidos_fecha_id
+    ON pedidos (fecha_pedido, id_pedido);
+
+-- Búsqueda de pedidos por cliente
+CREATE INDEX idx_pedidos_cliente_id
+    ON pedidos (id_cliente, id_pedido)
+    INCLUDE (fecha_pedido);
+
+-- Evita volver a la tabla para obtener cantidad y precio
+CREATE INDEX idx_detalle_pedido_cubriendo
+    ON detalle_pedido (id_pedido, id_producto)
+    INCLUDE (cantidad, precio_unitario);
+
+CREATE INDEX idx_productos_categoria
+    ON productos (id_categoria, id_producto);
+
+ANALYZE;

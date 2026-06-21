@@ -2,6 +2,7 @@
 -- TP: Optimización de Consultas SQL
 -- Materia: Base de Datos - Cátedra Merlino - 1C 2026
 -- Script: Consultas originales sin optimizar
+-- Ejecutar después de 02-load-data.sql
 -- ============================================================
 
 -- Consulta 1: Productos más vendidos en un rango de fechas
