@@ -26,9 +26,9 @@
 | 3 | Script de creación de tablas | [**LISTO**](./scripts/01-create-tables.sql) | `scripts/01-create-tables.sql` |
 | 4 | Script de carga de datos | [**LISTO**](./scripts/02-load-data.sql) | `scripts/02-load-data.sql` |
 | 5 | Consultas originales | [**LISTO**](./scripts/03-original-queries.sql) | `scripts/03-original-queries.sql` |
-| 6 | Planes de ejecución / mediciones iniciales | [**LISTO**](./scripts/04-explain-original.sql) | `scripts/04-explain-original.sql` |
+| 6 | Planes de ejecución / mediciones iniciales | [**LISTO**](./results/explain-before.txt) | `results/explain-before.txt` |
 | 7 | Consultas optimizadas | [**LISTO**](./scripts/06-optimized-queries.sql) | `scripts/06-optimized-queries.sql` |
-| 8 | Comparación de tiempos antes y después | [**FALTA**] | — |
+| 8 | Comparación de tiempos antes y después | [**LISTO**](./results/mediciones.md) | `results/mediciones.md` |
 | 9 | Conclusiones sobre las mejoras aplicadas | [**FALTA**] | — |
 
 ---
@@ -42,6 +42,10 @@ TP_Base_de_Datos/
 │   └── propuesta.pdf
 ├── imgs/
 │   └── diagrama_er_clasico_ventas_v2.png
+├── results/
+│   ├── explain-before.txt
+│   ├── explain-after.txt
+│   └── mediciones.md
 └── scripts/
     ├── 01-create-tables.sql
     ├── 02-load-data.sql

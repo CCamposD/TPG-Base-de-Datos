@@ -1,11 +1,4 @@
--- ============================================================
--- TP: Optimización de Consultas SQL
--- Materia: Base de Datos - Cátedra Merlino - 1C 2026
--- ============================================================
-
--- ============================================================
 -- 1. CREACIÓN DE TABLAS
--- ============================================================
 
 CREATE TABLE categorias (
     id_categoria SERIAL PRIMARY KEY,
@@ -44,9 +37,7 @@ CREATE TABLE detalle_pedido (
     FOREIGN KEY (id_producto) REFERENCES productos(id_producto)
 );
 
--- ============================================================
 -- 2. CARGA DE DATOS DE PRUEBA
--- ============================================================
 
 INSERT INTO categorias (nombre_categoria) VALUES
 ('Zapatos'),
@@ -77,34 +68,34 @@ INSERT INTO productos (nombre_producto, id_categoria, precio) VALUES
 ('Bicicleta', 5, 100.00),
 ('Monopatines', 5, 50.00);
 
--- 50 clientes generados automáticamente
+-- 10.000 clientes
 INSERT INTO clientes (nombre_cliente, direccion, telefono)
 SELECT
     'Cliente ' || i,
     'Direccion ' || i,
     '11111' || i
-FROM generate_series(1, 50) AS i;
+FROM generate_series(1, 10000) AS i;
 
--- 200 pedidos con fechas aleatorias entre 2022 y 2023
+-- 200.000 pedidos entre 2022 y 2023
 INSERT INTO pedidos (fecha_pedido, id_cliente)
 SELECT
-    '2022-01-01'::date + (random() * 730)::int,
-    (i % 50) + 1
-FROM generate_series(1, 200) AS i;
+    DATE '2022-01-01' + ((i - 1) % 730),
+    ((i - 1) % 10000) + 1
+FROM generate_series(1, 200000) AS i;
 
--- 5000 filas en detalle_pedido con precio_unitario tomado de productos
+-- Diez detalles por pedido
 INSERT INTO detalle_pedido (id_pedido, id_producto, cantidad, precio_unitario)
 SELECT
-    (i % 200) + 1,
-    (i % 20) + 1,
-    floor(random() * 10 + 1)::int,
+    ((i - 1) / 10) + 1,
+    ((i - 1) % 20) + 1,
+    ((i - 1) % 10) + 1,
     p.precio
-FROM generate_series(1, 5000) AS i
-JOIN productos p ON p.id_producto = (i % 20) + 1;
+FROM generate_series(1, 2000000) AS i
+JOIN productos p ON p.id_producto = ((i - 1) % 20) + 1;
 
--- ============================================================
+ANALYZE;
+
 -- 3. CONSULTAS ORIGINALES SIN OPTIMIZAR + EXPLAIN ANALYZE
--- ============================================================
 
 -- Consulta 1: Productos más vendidos en un rango de fechas
 EXPLAIN ANALYZE
@@ -142,35 +133,45 @@ JOIN detalle_pedido dp ON p.id_producto = dp.id_producto
 GROUP BY c.nombre_categoria
 ORDER BY total_vendido DESC;
 
--- ============================================================
 -- 4. CREACIÓN DE ÍNDICES
--- ============================================================
 
-CREATE INDEX idx_fecha_pedido  ON pedidos        (fecha_pedido);
-CREATE INDEX idx_id_cliente    ON pedidos        (id_cliente);
-CREATE INDEX idx_id_pedido     ON detalle_pedido (id_pedido);
-CREATE INDEX idx_id_producto   ON detalle_pedido (id_producto);
-CREATE INDEX idx_id_categoria  ON productos      (id_categoria);
+CREATE INDEX idx_pedidos_fecha_id
+    ON pedidos (fecha_pedido, id_pedido);
 
--- ============================================================
+CREATE INDEX idx_pedidos_cliente_id
+    ON pedidos (id_cliente, id_pedido)
+    INCLUDE (fecha_pedido);
+
+CREATE INDEX idx_detalle_pedido_cubriendo
+    ON detalle_pedido (id_pedido, id_producto)
+    INCLUDE (cantidad, precio_unitario);
+
+CREATE INDEX idx_productos_categoria
+    ON productos (id_categoria, id_producto);
+
+ANALYZE;
+
 -- 5. CONSULTAS OPTIMIZADAS + EXPLAIN ANALYZE
--- ============================================================
 
 -- Consulta 1 optimizada: Productos más vendidos en un rango de fechas
 EXPLAIN ANALYZE
-SELECT p.nombre_producto, SUM(dp.cantidad) AS total_vendido
+WITH ventas_por_producto AS (
+    SELECT dp.id_producto, SUM(dp.cantidad) AS total_vendido
+    FROM pedidos ped
+    JOIN detalle_pedido dp ON dp.id_pedido = ped.id_pedido
+    WHERE ped.fecha_pedido >= DATE '2022-01-01'
+      AND ped.fecha_pedido < DATE '2022-02-01'
+    GROUP BY dp.id_producto
+)
+SELECT p.nombre_producto, vpp.total_vendido
 FROM productos p
-JOIN detalle_pedido dp ON p.id_producto = dp.id_producto
-JOIN pedidos ped ON dp.id_pedido = ped.id_pedido
-WHERE ped.fecha_pedido BETWEEN '2022-01-01' AND '2022-01-31'
-GROUP BY p.nombre_producto
-ORDER BY total_vendido DESC;
+JOIN ventas_por_producto vpp ON vpp.id_producto = p.id_producto
+ORDER BY vpp.total_vendido DESC;
 
 -- Consulta 2 optimizada: Total vendido por mes
 EXPLAIN ANALYZE
 SELECT EXTRACT(MONTH FROM ped.fecha_pedido) AS mes, SUM(dp.precio_unitario * dp.cantidad) AS total_vendido
-FROM productos p
-JOIN detalle_pedido dp ON p.id_producto = dp.id_producto
+FROM detalle_pedido dp
 JOIN pedidos ped ON dp.id_pedido = ped.id_pedido
 GROUP BY mes
 ORDER BY mes;
@@ -185,20 +186,20 @@ WHERE ped.id_cliente = 1;
 
 -- Consulta 4 optimizada: Ventas agrupadas por categoría
 EXPLAIN ANALYZE
-SELECT c.nombre_categoria, SUM(dp.precio_unitario * dp.cantidad) AS total_vendido
+WITH ventas_por_producto AS (
+    SELECT id_producto,
+           SUM(precio_unitario * cantidad) AS total_vendido
+    FROM detalle_pedido
+    GROUP BY id_producto
+)
+SELECT c.nombre_categoria, SUM(vpp.total_vendido) AS total_vendido
 FROM categorias c
 JOIN productos p ON c.id_categoria = p.id_categoria
-JOIN detalle_pedido dp ON p.id_producto = dp.id_producto
-GROUP BY c.nombre_categoria
+JOIN ventas_por_producto vpp ON p.id_producto = vpp.id_producto
+GROUP BY c.id_categoria, c.nombre_categoria
 ORDER BY total_vendido DESC;
 
--- ============================================================
--- 6. TABLA COMPARATIVA
--- ============================================================
-
--- | Consulta | Problema detectado                                              | Índice aplicado                              | Por qué mejora                                                                 |
--- |----------|-----------------------------------------------------------------|----------------------------------------------|--------------------------------------------------------------------------------|
--- | 1        | Seq Scan en pedidos: recorre todas las filas para filtrar fecha | idx_fecha_pedido en pedidos(fecha_pedido)    | El índice permite acceso directo al rango de fechas sin recorrer toda la tabla |
--- | 2        | Hash Join costoso entre detalle_pedido y pedidos sin índice     | idx_id_pedido en detalle_pedido(id_pedido)  | El índice acelera el join evitando construir una hash table completa            |
--- | 3        | Seq Scan en pedidos para filtrar por id_cliente                 | idx_id_cliente en pedidos(id_cliente)        | El índice permite localizar directamente los pedidos del cliente buscado        |
--- | 4        | Seq Scan en productos para el join con categorias               | idx_id_categoria en productos(id_categoria)  | El índice acelera el join entre productos y categorias por id_categoria         |
+-- Resultados y comparación:
+-- results/mediciones.md
+-- results/explain-before.txt
+-- results/explain-after.txt
