@@ -68,7 +68,8 @@ planes está en [`results/mediciones.md`](./results/mediciones.md).
 TP_Base_de_Datos/
 ├── README.md
 ├── document/
-│   └── propuesta.pdf
+│   ├── propuesta.pdf
+│   └── informe.pdf (generado desde ../main.tex)
 ├── imgs/
 │   └── diagrama_er_clasico_ventas_v2.png
 ├── results/
@@ -76,12 +77,14 @@ TP_Base_de_Datos/
 │   ├── explain-after.txt
 │   └── mediciones.md
 └── scripts/
+    ├── 00-reset.sql
     ├── 01-create-tables.sql
     ├── 02-load-data.sql
     ├── 03-original-queries.sql
     ├── 04-explain-original.sql
     ├── 05-create-indexes.sql
     ├── 06-optimized-queries.sql
+    ├── 07-verify-results.sql
     └── script-completo.sql
 ```
 
@@ -103,3 +106,21 @@ También se puede crear, cargar y medir todo con un único archivo:
 ```bash
 psql -U usuario -d base_de_datos -f scripts/script-completo.sql
 ```
+
+El orquestador activa `ON_ERROR_STOP`, reconstruye el esquema y al final
+ejecuta `07-verify-results.sql`. Este último compara cada consulta original
+contra su versión optimizada mediante `EXCEPT` en ambos sentidos y aborta si
+detecta diferencias.
+
+## Ejecución reproducible
+
+Para simplificar el uso durante la corrección también se incluyó un `Makefile`:
+
+```bash
+make all DB=base_de_datos USER=usuario
+```
+
+Los targets `reset`, `schema`, `load`, `before`, `indexes`, `after` y `verify`
+permiten ejecutar cada etapa por separado. `reset` y `all` eliminan las tablas
+del experimento, por lo que deben utilizarse únicamente en la base destinada
+al TP.
