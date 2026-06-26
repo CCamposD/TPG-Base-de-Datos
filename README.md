@@ -22,7 +22,7 @@
 | # | Entregable | Estado | Archivo |
 | --- | --- | --- | --- |
 | 1 | Descripción del problema | [**LISTO**](./document/problema.md) | `document/problema.md` |
-| 2 | Modelo de datos / Diagrama ER | [**LISTO**](./imgs/diagrama_er_clasico_ventas_v2.png) | `imgs/diagrama_er_clasico_ventas_v2.png` |
+| 2 | Modelo de datos / Diagrama ER | [**LISTO**](./document/diagrama-er.tex) | `document/diagrama-er.tex` |
 | 3 | Script de creación de tablas | [**LISTO**](./scripts/01-create-tables.sql) | `scripts/01-create-tables.sql` |
 | 4 | Script de carga de datos | [**LISTO**](./scripts/02-load-data.sql) | `scripts/02-load-data.sql` |
 | 5 | Consultas originales | [**LISTO**](./scripts/03-original-queries.sql) | `scripts/03-original-queries.sql` |
@@ -69,9 +69,8 @@ TP_Base_de_Datos/
 ├── README.md
 ├── document/
 │   ├── propuesta.pdf
+│   ├── diagrama-er.tex
 │   └── informe.pdf (generado desde ../main.tex)
-├── imgs/
-│   └── diagrama_er_clasico_ventas_v2.png
 ├── results/
 │   ├── explain-before.txt
 │   ├── explain-after.txt

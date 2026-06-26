@@ -1,0 +1,69 @@
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  entity/.style={
+    draw,
+    rounded corners=2pt,
+    fill=blue!5,
+    minimum width=4.4cm,
+    text width=4.1cm,
+    inner sep=5pt,
+    font=\small
+  },
+  rel/.style={
+    -{Latex[length=2mm]},
+    thick,
+    color=black!75
+  },
+  every node/.style={align=left}
+]
+
+\node[entity] (clientes) {
+  \textbf{clientes}\\
+  \rule{4.1cm}{0.3pt}\\
+  \underline{id\_cliente}\\
+  nombre\_cliente\\
+  direccion\\
+  telefono
+};
+
+\node[entity, right=2.0cm of clientes] (pedidos) {
+  \textbf{pedidos}\\
+  \rule{4.1cm}{0.3pt}\\
+  \underline{id\_pedido}\\
+  fecha\_pedido\\
+  id\_cliente (FK)
+};
+
+\node[entity, right=2.0cm of pedidos] (detalle) {
+  \textbf{detalle\_pedido}\\
+  \rule{4.1cm}{0.3pt}\\
+  \underline{id\_detalle\_pedido}\\
+  id\_pedido (FK)\\
+  id\_producto (FK)\\
+  cantidad\\
+  precio\_unitario
+};
+
+\node[entity, below=1.7cm of detalle] (productos) {
+  \textbf{productos}\\
+  \rule{4.1cm}{0.3pt}\\
+  \underline{id\_producto}\\
+  nombre\_producto\\
+  id\_categoria (FK)\\
+  precio
+};
+
+\node[entity, left=2.0cm of productos] (categorias) {
+  \textbf{categorias}\\
+  \rule{4.1cm}{0.3pt}\\
+  \underline{id\_categoria}\\
+  nombre\_categoria
+};
+
+\draw[rel] (clientes.east) -- node[above]{1} node[below]{N} (pedidos.west);
+\draw[rel] (pedidos.east) -- node[above]{1} node[below]{N} (detalle.west);
+\draw[rel] (detalle.south) -- node[right]{N} node[left]{1} (productos.north);
+\draw[rel] (categorias.east) -- node[above]{1} node[below]{N} (productos.west);
+
+\end{tikzpicture}%
+}
